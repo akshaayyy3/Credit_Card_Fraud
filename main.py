@@ -3,7 +3,7 @@ from pydantic import BaseModel
 import pandas as pd
 import joblib
 from pathlib import Path
-
+from fastapi.middleware.cors import CORSMiddleware
 
 # Find project folder
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,7 +21,13 @@ app = FastAPI(
     version="1.0"
 )
 
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 # Input data structure
 class Transaction(BaseModel):
     Time: float
@@ -87,3 +93,13 @@ def predict(transaction: Transaction):
         "prediction": result,
         "fraud_probability": round(float(probability), 4)
     }
+
+@app.get("/sample")
+def get_sample():
+    data_path = BASE_DIR / "data" / "creditcard.csv"
+
+    df = pd.read_csv(data_path)
+
+    sample = df.drop("Class", axis=1).iloc[0].to_dict()
+
+    return sample
